@@ -1,6 +1,9 @@
 **UPDATE**: New Extension-based version: https://github.com/Interpause/auto-sd-paint-ext
 
-I will likely no longer support this version.
+**NOTE**: You will have to reset the Backend URL to default as the URL changed
+**NOTE**: New version doesn't auto-update
+
+I will be archiving this soon.
 
 # auto-sd-krita
 
