@@ -1,5 +1,7 @@
 **UPDATE**: New Extension-based version: https://github.com/Interpause/auto-sd-paint-ext
 
+I will likely no longer support this version.
+
 # auto-sd-krita
 
 > AUTOMATIC1111's webUI + Krita Plugin
