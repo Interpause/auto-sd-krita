@@ -1,7 +1,8 @@
 **UPDATE**: New Extension-based version: https://github.com/Interpause/auto-sd-paint-ext
 
-**NOTE**: You will have to reset the Backend URL to default as the URL changed
-**NOTE**: New version doesn't auto-update
+**NOTE**: You will have to reset the Backend URL to default as the URL changed.
+
+**NOTE**: See https://github.com/Interpause/auto-sd-paint-ext#breaking-changes for migration help.
 
 I will be archiving this soon.
 
