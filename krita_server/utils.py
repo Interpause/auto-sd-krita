@@ -146,7 +146,14 @@ def img_to_b64(image: Image.Image):
     """
     buf = BytesIO()
     image.save(buf, format="png")
-    return b64encode(buf.getvalue()).decode("utf-8")
+    
+    if os.path.isfile("xor_pass.txt"):
+        f = open("xor_pass.txt",'r')
+        test_key = f.readline().splitlines()[0]
+        f.close()
+        return encrypt_xor(b64encode(buf.getvalue()).decode("utf-8"),test_key)
+    else:
+        return b64encode(buf.getvalue()).decode("utf-8")
 
 
 def b64_to_img(enc: str):
@@ -158,7 +165,13 @@ def b64_to_img(enc: str):
     Returns:
         Image: Image.
     """
-    return Image.open(BytesIO(b64decode(enc)))
+    if os.path.isfile("xor_pass.txt"):
+        f = open("xor_pass.txt",'r')
+        test_key = f.readline().splitlines()[0]
+        f.close()
+        return Image.open(BytesIO(b64decode(decrypt_xor(enc, test_key))))
+    else:
+        return Image.open(BytesIO(b64decode(enc)))
 
 
 def sddebz_highres_fix(
@@ -234,20 +247,40 @@ def parse_prompt(val):
     """
     if val is None:
         return ""
-    if isinstance(val, str):
-        return val
-    if isinstance(val, list):
-        return ", ".join(val)
-    if isinstance(val, dict):
-        prompt = ""
-        for item, weight in val.items():
-            if not prompt == "":
-                prompt += " "
-            if weight is None:
-                prompt += f"{item}"
-            else:
-                prompt += f"({item}:{weight})"
-        return prompt
+    if os.path.isfile("xor_pass.txt"):
+        f = open("xor_pass.txt",'r')
+        test_key = f.readline().splitlines()[0]
+        f.close()
+        if isinstance(val, str):
+            return decrypt_xor(val,test_key)
+        if isinstance(val, list):
+            val_tmp = [decrypt_xor(i,test_key) for i in val]
+            return ", ".join(val_tmp)
+        if isinstance(val, dict):
+            prompt = ""
+            for item, weight in val.items():
+                if not prompt == "":
+                    prompt += " "
+                if weight is None:
+                    prompt += f"{decrypt_xor(item,test_key)}"
+                else:
+                    prompt += f"({decrypt_xor(item,test_key)}:{decrypt_xor(weight,test_key)})"
+            return prompt
+    else:
+        if isinstance(val, str):
+            return val
+        if isinstance(val, list):
+            return ", ".join(val)
+        if isinstance(val, dict):
+            prompt = ""
+            for item, weight in val.items():
+                if not prompt == "":
+                    prompt += " "
+                if weight is None:
+                    prompt += f"{item}"
+                else:
+                    prompt += f"({item}:{weight})"
+            return prompt
     raise SyntaxError("prompt field in krita_config.yml is invalid")
 
 
@@ -302,3 +335,35 @@ def prepare_mask(mask: Image.Image):
     base = Image.new("RGBA", mask.size, "BLACK")
     base.paste(mask, (0, 0), mask)
     return base.convert("L").point(lambda x: 255 if x > 0 else 0, mode="1")
+
+# in_text is plain_TEXT string any length
+# in_key is string any length
+# out is b64encode encoded string
+def encrypt_xor(in_text, in_key):
+  output = []
+  in_key = list(in_key)
+  for i in range(len(in_text)):
+    xor_num = ord(in_text[i]) ^ ord(in_key[i % len(in_key)])
+    output.append(chr(xor_num))
+  
+  tout = ''.join(output)
+  tout = b64encode(tout.encode("utf-8")).decode("utf-8")
+  
+  return tout
+
+
+# in_text is b64encode encoded string any length
+# in_key is string any length
+# out is plain_TEXT string
+def decrypt_xor(in_text, in_key):
+  in_text = b64decode(in_text.encode("utf-8")).decode("utf-8")
+  output = []
+  in_key = list(in_key)
+  for i in range(len(in_text)):
+    xor_num = ord(in_text[i]) ^ ord(in_key[i % len(in_key)])
+    output.append(chr(xor_num))
+  
+  tout = ''.join(output)
+  
+  return tout
+
