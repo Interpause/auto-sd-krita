@@ -6,10 +6,19 @@ from krita import Document, QBuffer, QByteArray, QImage, QIODevice
 
 from .config import Config
 
+# to use Encryption
+# 1. create file xor_pass.txt in server (at krita_config.yaml file location, top level)
+# (if you use Colab - xor_pass.txt must be on server only
+# file xor_pass.txt with same text key as here - test_encryption_key
+# 2 and set use_encryption to True
+test_key = "test_encryption_key"
+use_encryption = False
 
 def fix_prompt(prompt: str):
     """Multiline tokens -> comma-separated tokens. Replace empty prompts with None."""
     joined = ", ".join(filter(bool, [x.strip() for x in prompt.splitlines()]))
+    if use_encryption and joined != "":
+        joined = encrypt_xor(joined,test_key)
     return joined if joined != "" else None
 
 
@@ -172,10 +181,47 @@ def img_to_b64(img: QImage):
     buffer = QBuffer(ba)
     buffer.open(QIODevice.WriteOnly)
     img.save(buffer, "PNG", 0)
-    return ba.toBase64().data().decode("utf-8")
+    if use_encryption:
+        return encrypt_xor(ba.toBase64().data().decode("utf-8"), test_key)
+    else:
+        return ba.toBase64().data().decode("utf-8")
 
 
 def b64_to_img(enc: str):
     """Converts base64-encoded string to QImage"""
+    if use_encryption:
+        enc = decrypt_xor(enc, test_key)
     ba = QByteArray.fromBase64(enc.encode("utf-8"))
     return QImage.fromData(ba, "PNG")
+
+# in_text is plain_TEXT string any length
+# in_key is string any length
+# out is b64encode encoded string
+def encrypt_xor(in_text, in_key):
+  output = []
+  in_key = list(in_key)
+  for i in range(len(in_text)):
+    xor_num = ord(in_text[i]) ^ ord(in_key[i % len(in_key)])
+    output.append(chr(xor_num))
+  
+  tout = ''.join(output)
+  tout = QByteArray(tout.encode("utf-8")).toBase64().data().decode("utf-8")
+  
+  return tout
+
+
+# in_text is b64encode encoded string any length
+# in_key is string any length
+# out is plain_TEXT string
+def decrypt_xor(in_text, in_key):
+  in_text = QByteArray.fromBase64(in_text.encode("utf-8")).data().decode("utf-8")
+  output = []
+  in_key = list(in_key)
+  for i in range(len(in_text)):
+    xor_num = ord(in_text[i]) ^ ord(in_key[i % len(in_key)])
+    output.append(chr(xor_num))
+  
+  tout = ''.join(output)
+  
+  return tout
+
