@@ -50,6 +50,9 @@ def start():
     # )
     root_logger.addHandler(handler)
     root_logger.setLevel(logging.INFO)
+    root_logger.warning(
+        "No longer under maintenance! Try https://github.com/Interpause/auto-sd-paint-ext instead."
+    )
 
     with server.run_in_thread():
         webui()

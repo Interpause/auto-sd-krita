@@ -61,6 +61,11 @@ class SDCommonWidget(QWidget):
 
         layout = QVBoxLayout()
         layout.addWidget(title)
+        layout.addWidget(
+            QLabel(
+                "No longer under maintenance! Try https://github.com/Interpause/auto-sd-paint-ext instead."
+            )
+        )
         layout.addLayout(self.upscaler_layout)
         layout.addLayout(self.face_restorer_layout)
         layout.addLayout(self.codeformer_weight_layout)
